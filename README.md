@@ -147,10 +147,11 @@ After running all steps, you should get:
 dataset_root/
 ├── images/
 ├── sparse/0/
-    ├── cameras.txt       # From imgs2poses.py
-    ├── images.txt        # From imgs2poses.py
-    ├── points3D.txt      # From own.py
-├── views/dense/
+    ├── cameras.txt       # From polymap.py
+    ├── images.txt        # From polymap.py
+    ├── points3D.txt      
+├── views/dense/          # From own.py
     ├── fused.ply         # point cloud
+├── posess_bounds.npy     # From imgs2posess.py
 ```
 
