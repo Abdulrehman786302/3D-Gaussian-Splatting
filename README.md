@@ -136,3 +136,22 @@ your_dataset/
         ├── fused.ply          # From tools/own.py
     ├── poses_bounds.npy       # From tools/bounds/imgs2bounds.py
 ```
+
+---
+
+## 🧠 Train & Render Model
+
+### 🔹 Train the Model
+
+```bash
+python train.py --source_path dataset/Ithaca/flame --model_path output/flame --eval --iteration 1000 --n_views 9 --depth_pseudo_weight 1
+```
+🔤 Arguments
+
+Argument	Description
+--source_path	Path to your dataset (must contain images/, cameras.txt, images.txt)
+--model_path	Directory to save model checkpoints and logs
+--eval	Enables evaluation mode during training
+--iteration	Number of training iterations (e.g. 1000)
+--n_views	Number of camera views to consider per step
+--depth_pseudo_weight	Weight assigned to pseudo-depth supervision (0 = disable)
