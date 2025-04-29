@@ -141,13 +141,13 @@ your_dataset/
 
 ## 🧠 Train & Render Model
 
-### 🔹 Train the Model
+### 🔹 Train the Model:
 
 ```bash
 python train.py --source_path dataset/Ithaca/flame --model_path output/flame --eval --iteration 1000 --n_views 9 --depth_pseudo_weight 1
 ```
 🔤 Arguments
-
+```bash
 Argument	Description
 --source_path	Path to your dataset (must contain images/, cameras.txt, images.txt)
 --model_path	Directory to save model checkpoints and logs
@@ -155,3 +155,20 @@ Argument	Description
 --iteration	Number of training iterations (e.g. 1000)
 --n_views	Number of camera views to consider per step
 --depth_pseudo_weight	Weight assigned to pseudo-depth supervision (0 = disable)
+```
+### 🔹 Rendering:
+
+```bash
+python render.py --source_path dataset/Ithaca/flame/ --model_path output/flame --iteration 1000 --video --fps 30
+```
+
+🔤 Arguments
+```bash
+Argument	Description
+--source_path	Path to the dataset used for training (must contain camera files and images)
+--model_path	Path to the trained model directory
+--iteration	Specifies which training iteration checkpoint to load (e.g., 1000)
+--video	If set, outputs a video instead of individual frames
+--fps	Frame rate for the output video (e.g., 30)
+```
+
