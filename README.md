@@ -74,7 +74,83 @@ pip install imageio==2.31.2
 pip install open3d==0.17.0
 pip install plyfile
 ```
+## 🧭 Generate COLMAP-Compatible Output for Custom Datasets
+
+This project supports generating `cameras.txt`, `images.txt`, and `points3D.txt` compatible with COLMAP from a custom image dataset.
+
+### ✅ Input Requirements
+
+- Image directory (`images/`)
+- Features matching and Feature Extraction (used by `polymap.py`)
+- Intrinsics and extrinsics estimation (via `imgs2poses.py`)
+- Postprocessing and point fusion (via `own.py`)
+
+---
+
+## 🔧 Install COLMAP (Windows)
+
+Before generating COLMAP-compatible files, install COLMAP.
+
+### Option 1: Download Precompiled Binary (Recommended)
+
+1. Go to the [COLMAP Releases](https://github.com/colmap/colmap/releases) page.
+2. Download the latest **Windows .zip** build.
+3. Extract and add the `COLMAP` directory to your system `PATH`.
+
+To verify installation:
+
+```bash
+colmap -h
+pip install enlighten
+pip install pycolmap
+```
 
 
+### 📸 Step-by-Step Instructions
 
+#### 1. Fecture extraction and Feacture matching dataset:
+
+```bash
+python tools/manual/polymap.py
+```
+Prompts:
+path::  secne path
+path::  images folder path
+
+if it's stop in matching fectures process open colmap
+
+
+### 2. Estimate Poses and Camera Parameters
+This script creates COLMAP-style cameras.txt and images.txt files:
+
+```bash
+python tools/bounds/imgs2poses.py secence_path
+```
+Replace "secence_path" with the full path to your dataset root. Ensure it contains an images/ subfolder.
+
+
+### 3. Generate 3D Points and Final fused.ply or dense reconstruction
+This script generates the final COLMAP-compatible points3D.txt file:
+
+```bash
+python tools/own.py
+```
+Prompts:
+path::  dataset path e.g FSGS\dataset
+path::  secene name e.g \flame
+views:: Number of view to use for dense reconstrctuion
+
+📂 Output Structure
+After running all steps, you should get:
+
+```bash
+dataset_root/
+├── images/
+├── sparse/0/
+    ├── cameras.txt       # From imgs2poses.py
+    ├── images.txt        # From imgs2poses.py
+    ├── points3D.txt      # From own.py
+├── views/dense/
+    ├── fused.ply         # point cloud
+```
 
