@@ -1,120 +1,138 @@
-# FSGS: Real-Time Few-Shot View Synthesis using Gaussian Splatting
+# 🎯 Fast Splatting Gaussian Splatting (FSGS)
 
+This repository contains an efficient pipeline for confidence-aware Gaussian Splatting with COLMAP-compatible outputs. It includes pose estimation, polygonal preprocessing, and point cloud generation for custom RGB image datasets.
 
+---
 
-[//]: # (###  [Project]&#40;https://zehaozhu.github.io/FSGS/&#41; | [Arxiv]&#40;https://arxiv.org/abs/2312.00451&#41;)
+## 📦 Setup Instructions (Windows + CUDA 12.6)
 
-[![Paper](https://img.shields.io/badge/cs.CV-Paper-b31b1b?logo=arxiv&logoColor=red)](https://arxiv.org/abs/2312.00451)
-[![Project Page](https://img.shields.io/badge/FSGS-Website-blue?logo=googlechrome&logoColor=blue)](https://zehaozhu.github.io/FSGS/)
-[![Video](https://img.shields.io/badge/YouTube-Video-c4302b?logo=youtube&logoColor=red)](https://youtu.be/CarJgsx3DQY)
-[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FVITA-Group%2FFSGS&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
+### ✅ Prerequisites
 
+Ensure the following are installed:
 
+- [Visual Studio 2022](https://visualstudio.microsoft.com/) (with Desktop C++ development tools)
+- [CUDA Toolkit 12.6](https://developer.nvidia.com/cuda-downloads)
+- [Miniconda or Anaconda](https://www.anaconda.com/)
+- [Git](https://git-scm.com/)
+- [COLMAP](https://github.com/colmap/colmap)
 
----------------------------------------------------
-<p align="center" >
-  <a href="">
-    <img src="https://github.com/zhiwenfan/zhiwenfan.github.io/blob/master/Homepage_files/videos/FSGS_gif.gif?raw=true" alt="demo" width="85%">
-  </a>
-</p>
+---
 
+### 🔧 COLMAP Installation
 
-## Environmental Setups
-We provide install method based on Conda package and environment management:
+#### Prebuilt Binary (Recommended)
+
+1. Download the latest release from [COLMAP Releases](https://github.com/colmap/colmap/releases).
+2. Extract it and add the directory to your system `PATH`.
+3. Verify installation:
+
 ```bash
-conda env create --file environment.yml
-conda activate FSGS
+colmap -h
 ```
-**CUDA 11.7** is strongly recommended.
+####  1. Clone with Submodules
 
-## Data Preparation
-In data preparation step, we reconstruct the sparse view inputs using SfM using the camera poses provided by datasets. Next, we continue the dense stereo matching under COLMAP with the function `patch_match_stereo` and obtain the fused stereo point cloud from `stereo_fusion`. 
-
-``` 
-cd FSGS
-mkdir dataset 
-cd dataset
-
-# download LLFF dataset
-gdown 16VnMcF1KJYxN9QId6TClMsZRahHNMW5g
-
-# run colmap to obtain initial point clouds with limited viewpoints
-python tools/colmap_llff.py
-
-# download MipNeRF-360 dataset
-wget http://storage.googleapis.com/gresearch/refraw360/360_v2.zip
-unzip -d mipnerf360 360_v2.zip
-
-# run colmap on MipNeRF-360 dataset
-python tools/colmap_360.py
-``` 
-
-
-We use the latest version of colmap to preprocess the datasets. If you meet issues on installing colmap, we provide a docker option. 
-``` 
-# if you can not install colmap, follow this to build a docker environment
-docker run --gpus all -it --name fsgs_colmap --shm-size=32g  -v /home:/home colmap/colmap:latest /bin/bash
-apt-get install pip
-pip install numpy
-python3 tools/colmap_llff.py
-``` 
-
-
-We provide both the sparse and dense point cloud after we proprecess them. You may download them [through this link](https://drive.google.com/drive/folders/1lYqZLuowc84Dg1cyb8ey3_Kb-wvPjDHA?usp=sharing). We use dense point cloud during training but you can still try sparse point cloud on your own.
-
-## Training
-Train FSGS on LLFF dataset with 3 views
-``` 
-python train.py  --source_path dataset/nerf_llff_data/horns --model_path output/horns --eval  --n_views 3 --sample_pseudo_interval 1
-``` 
-
-
-Train FSGS on MipNeRF-360 dataset with 24 views
-``` 
-python train.py  --source_path dataset/mipnerf360/garden --model_path output/garden  --eval  --n_views 24 --depth_pseudo_weight 0.03  
-``` 
-
-
-## Rendering
-Run the following script to render the images.  
-
+```bash
+git clone --recursive https://github.com/your_username/fsgs.git
+cd fsgs
 ```
-python render.py --source_path dataset/nerf_llff_data/horns/  --model_path  output/horns --iteration 10000
+2. (Optional) Configure Environment Variables for CMake
+
+```bash
+set CUDA_TOOLKIT_ROOT_DIR="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6"
+set CMAKE_MAKE_PROGRAM=msbuild
+set CMAKE_GENERATOR="Visual Studio 17 2022"
 ```
 
-You can customize the rendering path as same as NeRF by adding `video` argument
+Configure:
 
-```
-python render.py --source_path dataset/nerf_llff_data/horns/  --model_path  output/horns --iteration 10000  --video  --fps 30
-```
-
-## Evaluation
-You can just run the following script to evaluate the model.  
-
-```
-python metrics.py --source_path dataset/nerf_llff_data/horns/  --model_path  output/horns --iteration 10000
+```bash
+cmake -G "Visual Studio 17 2022" .
 ```
 
-## Acknowledgement
+🐍 Python Environment
+3. Create & Activate Environment
 
-Special thanks to the following awesome projects!
-
-- [Gaussian-Splatting](https://github.com/graphdeco-inria/gaussian-splatting)
-- [DreamGaussian](https://github.com/ashawkey/diff-gaussian-rasterization)
-- [SparseNeRF](https://github.com/Wanggcong/SparseNeRF)
-- [MipNeRF-360](https://github.com/google-research/multinerf)
-
-## Citation
-If you find our work useful for your project, please consider citing the following paper.
-
-
+```bash
+conda create -n fsgs python=3.8.1 -y
+conda activate fsgs
 ```
-@misc{zhu2023FSGS, 
-title={FSGS: Real-Time Few-Shot View Synthesis using Gaussian Splatting}, 
-author={Zehao Zhu and Zhiwen Fan and Yifan Jiang and Zhangyang Wang}, 
-year={2023},
-eprint={2312.00451},
-archivePrefix={arXiv},
-primaryClass={cs.CV} 
-}
+
+4. Install PyTorch (CUDA 12.4 compatible)
+
+```bash
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+```
+Verify:
+```bash
+python -c "import torch; print(torch.__version__); print(torch.cuda.is_available())"
+```
+
+5. Install Dependencies
+
+```bash
+pip install setuptools==69.5.1
+pip install submodules/diff-gaussian-rasterization-confidence/
+pip install submodules/simple-knn/
+pip install matplotlib==3.5.3
+pip install torchmetrics==1.2.0
+pip install timm==0.9.12
+pip install opencv_python==4.8.1.78
+pip install imageio==2.31.2
+pip install open3d==0.17.0
+pip install plyfile
+```
+
+
+## 🧑‍💻 Running the Pipeline
+
+### 1. Organize Your Dataset
+
+Your dataset should be structured like this:
+```bash
+your_dataset/
+      ├── images/
+```
+
+### 2. To generate output cameras.txt image.txt and Point3D.txt
+Run this command to generate polygonal masks if required for your dataset:
+```bash
+python tools/manual/polymap.py
+```
+You'll be prompted to enter the following paths:
+path::  C:\path\to\your_dataset
+path::  images
+
+If it stop for fetures matching step, open colmap gui and then do it manually and come back again to this step afte feture matching.
+
+### 3. Estimate Camera Poses
+Run this script to estimate the camera poses and generate cameras.txt and images.txt files:
+
+```bash
+python tools/bounds/imgs2poses.py C:\path\to\your_dataset
+```
+Replace C:\path\to\your_dataset with the full path to your dataset.
+
+### 4. Generate 3D Points
+Run this final step to generate the fused point cloud .ply:
+
+```bash
+python tools/own.py
+```
+You'll be prompted to enter the following paths:
+path::  C:\path\to\your_dataset\
+Name::  your_scene_name
+Views:: number of images for dense reconstruction
+
+### Output Files
+After running the pipeline, your dataset folder will contain the following files:
+```bash
+your_dataset/
+    ├── images/
+    ├── sparse/0/
+        ├── cameras.txt        # From tools/manual/polymap.py
+        ├── images.txt         # From tools/manual/polymap.py
+        ├── points3D.txt       # From tools/manual/polymap.py
+    ├── n_Views/dense
+        ├── fused.ply          # From tools/own.py
+    ├── poses_bounds.npy       # From tools/bounds/imgs2bounds.py
 ```
