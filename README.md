@@ -1,6 +1,7 @@
 # 3D-Gaussian-Splatting
 🚀 Installation Guide (Windows + CUDA 12.6)
 1. Prerequisites
+
 Ensure the following are installed:
 Visual Studio 2022 with C++ components
 CUDA Toolkit 12.6
