@@ -1,157 +1,120 @@
+# FSGS: Real-Time Few-Shot View Synthesis using Gaussian Splatting
 
-# 🌐 Fast Splatting Gaussian Splatting (FSGS)
 
-This repository contains code for fast and confidence-aware Gaussian Splatting using PyTorch and CUDA. It is designed for efficient 3D rendering and scene capture pipelines.
 
----
+[//]: # (###  [Project]&#40;https://zehaozhu.github.io/FSGS/&#41; | [Arxiv]&#40;https://arxiv.org/abs/2312.00451&#41;)
 
-## 📦 Setup Instructions (Windows + CUDA 12.6)
+[![Paper](https://img.shields.io/badge/cs.CV-Paper-b31b1b?logo=arxiv&logoColor=red)](https://arxiv.org/abs/2312.00451)
+[![Project Page](https://img.shields.io/badge/FSGS-Website-blue?logo=googlechrome&logoColor=blue)](https://zehaozhu.github.io/FSGS/)
+[![Video](https://img.shields.io/badge/YouTube-Video-c4302b?logo=youtube&logoColor=red)](https://youtu.be/CarJgsx3DQY)
+[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FVITA-Group%2FFSGS&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
 
-### ✅ Prerequisites
 
-Before proceeding, make sure the following software is installed:
 
-- [Visual Studio 2022](https://visualstudio.microsoft.com/) (with C++ Desktop Development tools)
-- [CUDA Toolkit 12.6](https://developer.nvidia.com/cuda-downloads)
-- [Miniconda or Anaconda](https://www.anaconda.com/)
-- `git` (to clone submodules)
+---------------------------------------------------
+<p align="center" >
+  <a href="">
+    <img src="https://github.com/zhiwenfan/zhiwenfan.github.io/blob/master/Homepage_files/videos/FSGS_gif.gif?raw=true" alt="demo" width="85%">
+  </a>
+</p>
 
----
 
-### 🔧 Environment Setup
-
-#### 1. Clone the repository
-
+## Environmental Setups
+We provide install method based on Conda package and environment management:
 ```bash
-git clone --recursive https://github.com/VITA-Group/FSGS.git
-cd fsgs
+conda env create --file environment.yml
+conda activate FSGS
 ```
-###  2. (Optional) Set Environment Variables
-If needed, set these before building with CMake:
+**CUDA 11.7** is strongly recommended.
 
-```bash
-set CUDA_TOOLKIT_ROOT_DIR="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6"
-set CMAKE_MAKE_PROGRAM=msbuild
-set CMAKE_GENERATOR="Visual Studio 17 2022"
+## Data Preparation
+In data preparation step, we reconstruct the sparse view inputs using SfM using the camera poses provided by datasets. Next, we continue the dense stereo matching under COLMAP with the function `patch_match_stereo` and obtain the fused stereo point cloud from `stereo_fusion`. 
 
-echo %CMAKE_GENERATOR%
-echo %CMAKE_MAKE_PROGRAM%
+``` 
+cd FSGS
+mkdir dataset 
+cd dataset
+
+# download LLFF dataset
+gdown 16VnMcF1KJYxN9QId6TClMsZRahHNMW5g
+
+# run colmap to obtain initial point clouds with limited viewpoints
+python tools/colmap_llff.py
+
+# download MipNeRF-360 dataset
+wget http://storage.googleapis.com/gresearch/refraw360/360_v2.zip
+unzip -d mipnerf360 360_v2.zip
+
+# run colmap on MipNeRF-360 dataset
+python tools/colmap_360.py
+``` 
+
+
+We use the latest version of colmap to preprocess the datasets. If you meet issues on installing colmap, we provide a docker option. 
+``` 
+# if you can not install colmap, follow this to build a docker environment
+docker run --gpus all -it --name fsgs_colmap --shm-size=32g  -v /home:/home colmap/colmap:latest /bin/bash
+apt-get install pip
+pip install numpy
+python3 tools/colmap_llff.py
+``` 
+
+
+We provide both the sparse and dense point cloud after we proprecess them. You may download them [through this link](https://drive.google.com/drive/folders/1lYqZLuowc84Dg1cyb8ey3_Kb-wvPjDHA?usp=sharing). We use dense point cloud during training but you can still try sparse point cloud on your own.
+
+## Training
+Train FSGS on LLFF dataset with 3 views
+``` 
+python train.py  --source_path dataset/nerf_llff_data/horns --model_path output/horns --eval  --n_views 3 --sample_pseudo_interval 1
+``` 
+
+
+Train FSGS on MipNeRF-360 dataset with 24 views
+``` 
+python train.py  --source_path dataset/mipnerf360/garden --model_path output/garden  --eval  --n_views 24 --depth_pseudo_weight 0.03  
+``` 
+
+
+## Rendering
+Run the following script to render the images.  
+
 ```
-
-#### 3. Configure CMake
-From the root directory of the repo:
-
-```bash
-cmake -G "Visual Studio 17 2022" .
-```
-
-#### 4. Create Conda Environment
-
-```bash
-conda create -n fsgs python=3.8.1 -y
-conda activate fsgs
-```
-
-#### 5. Install PyTorch with CUDA Support
-Install the PyTorch version compatible with CUDA 12.4:
-
-```bash
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
-python -c "import torch; print(torch.__version__); print(torch.cuda.is_available())"
-```
-
-#### 6. Python Dependencies
-
-```bash
-pip install setuptools==69.5.1
-pip install submodules/diff-gaussian-rasterization-confidence/
-pip install submodules/simple-knn/
-pip install matplotlib==3.5.3
-pip install torchmetrics==1.2.0
-pip install timm==0.9.12
-pip install opencv_python==4.8.1.78
-pip install imageio==2.31.2
-pip install open3d==0.17.0
-pip install plyfile
-```
-## 🧭 Generate COLMAP-Compatible Output for Custom Datasets
-
-This project supports generating `cameras.txt`, `images.txt`, and `points3D.txt` compatible with COLMAP from a custom image dataset.
-
-### ✅ Input Requirements
-
-- Image directory (`images/`)
-- Features matching and Feature Extraction (used by `polymap.py`)
-- Intrinsics and extrinsics estimation (via `imgs2poses.py`)
-- Postprocessing and point fusion (via `own.py`)
-
----
-
-## 🔧 Install COLMAP (Windows)
-
-Before generating COLMAP-compatible files, install COLMAP.
-
-### Option 1: Download Precompiled Binary (Recommended)
-
-1. Go to the [COLMAP Releases](https://github.com/colmap/colmap/releases) page.
-2. Download the latest **Windows .zip** build.
-3. Extract and add the `COLMAP` directory to your system `PATH`.
-
-To verify installation:
-
-```bash
-colmap -h
-pip install enlighten
-pip install pycolmap
+python render.py --source_path dataset/nerf_llff_data/horns/  --model_path  output/horns --iteration 10000
 ```
 
+You can customize the rendering path as same as NeRF by adding `video` argument
 
-### 📸 Step-by-Step Instructions
-
-#### 1. Fecture extraction and Feacture matching dataset:
-
-```bash
-python tools/manual/polymap.py
 ```
-Prompts:
-path::  secne path
-path::  images folder path
-
-if it's stop in matching fectures process open colmap
-
-
-### 2. Estimate Poses and Camera Parameters
-This script creates COLMAP-style cameras.txt and images.txt files:
-
-```bash
-python tools/bounds/imgs2poses.py secence_path
-```
-Replace "secence_path" with the full path to your dataset root. Ensure it contains an images/ subfolder.
-
-
-### 3. Generate 3D Points and Final fused.ply or dense reconstruction
-This script generates the final COLMAP-compatible points3D.txt file:
-
-```bash
-python tools/own.py
-```
-Prompts:
-path::  dataset path e.g FSGS\dataset
-path::  secene name e.g \flame
-views:: Number of view to use for dense reconstrctuion
-
-📂 Output Structure
-After running all steps, you should get:
-
-```bash
-dataset_root/
-├── images/
-├── sparse/0/
-    ├── cameras.txt       # From polymap.py
-    ├── images.txt        # From polymap.py
-    ├── points3D.txt      
-├── views/dense/          # From own.py
-    ├── fused.ply         # point cloud
-├── posess_bounds.npy     # From imgs2posess.py
+python render.py --source_path dataset/nerf_llff_data/horns/  --model_path  output/horns --iteration 10000  --video  --fps 30
 ```
 
+## Evaluation
+You can just run the following script to evaluate the model.  
+
+```
+python metrics.py --source_path dataset/nerf_llff_data/horns/  --model_path  output/horns --iteration 10000
+```
+
+## Acknowledgement
+
+Special thanks to the following awesome projects!
+
+- [Gaussian-Splatting](https://github.com/graphdeco-inria/gaussian-splatting)
+- [DreamGaussian](https://github.com/ashawkey/diff-gaussian-rasterization)
+- [SparseNeRF](https://github.com/Wanggcong/SparseNeRF)
+- [MipNeRF-360](https://github.com/google-research/multinerf)
+
+## Citation
+If you find our work useful for your project, please consider citing the following paper.
+
+
+```
+@misc{zhu2023FSGS, 
+title={FSGS: Real-Time Few-Shot View Synthesis using Gaussian Splatting}, 
+author={Zehao Zhu and Zhiwen Fan and Yifan Jiang and Zhangyang Wang}, 
+year={2023},
+eprint={2312.00451},
+archivePrefix={arXiv},
+primaryClass={cs.CV} 
+}
+```
